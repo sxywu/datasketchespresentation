@@ -1,8 +1,62 @@
 pt.sketchLines = pt.sketchLines || {};
 
 pt.sketchLines.init = function() {
+
+	//Remove any existing svgs
+	d3.select('#sketch_lines #sketchLines svg').remove();
+
+	// calculate data
 	var {lines, songs, diamonds} = processData();
 	var {linePositions, songPositions, diamondPositions} = positionLines(lines, songs, diamonds);
+
+	///////////////////////////////////////////////////////////////////////////
+	/////////////////// draw lines and themes ///////////// ///////////////////
+	///////////////////////////////////////////////////////////////////////////
+	var margin = {
+		top: 0,
+		right: 0,
+		bottom: 0,
+		left: 0
+	};
+	var width = window.innerWidth - margin.left - margin.right;
+	var height = window.innerHeight - margin.top - margin.bottom;
+	var transition = d3.transition().duration(500);
+
+	// initiate SVG elements
+	var svg = d3.select('#sketch_lines #sketchLines')
+		.append('svg')
+		.attr('width', width).attr('height', height);
+
+	var circles = svg.selectAll('path')
+      .data(linePositions, (d) => d.id);
+
+  circles.exit().remove();
+
+  circles = circles.enter().append('path')
+    .merge(circles)
+    .style('cursor', (d) => d.selected ? 'pointer' : 'default')
+    .attr('fill', (d) => d.fill)
+    .attr('d', (d) => drawPath(d));
+
+	var simulation = d3.forceSimulation()
+		.force("charge", d3.forceManyBody())
+	  .force('collide', d3.forceCollide().radius(d => d.radius))
+	  .force('x', d3.forceX().x(d => d.focusX))
+	  .force('y', d3.forceY().y(d => d.focusY))
+		.nodes(linePositions)
+    .on('tick', () => {
+			circles.attr('transform', (d) => 'translate(' + [d.x, d.y] + ')');
+		}).on('end', () => {
+			circles.transition(transition)
+	      .attr('d', (d) => drawPath(d, true))
+	      .attr('transform', (d) => {
+	        // set the x and y to its focus (where it should be)
+	        d.x = d.focusX;
+	        d.y = d.focusY;
+	        return 'translate(' + [d.x, d.y] + ')';
+	      });
+		})
+	  .alphaMin(.4);
 
 	///////////////////////////////////////////////////////////////////////////
 	/////////////////// Process data (lines, songs, themes) ///////////////////
@@ -83,7 +137,6 @@ pt.sketchLines.init = function() {
 	/////////////////// Position lines and themes /////////////////////////////
 	///////////////////////////////////////////////////////////////////////////
 	function positionLines(lines, songs, diamonds) {
-		var width = 720;
 		var lineSize = 5;
     var fontSize = 14;
     var padding = {x: 1, y: lineSize * 5};
@@ -176,5 +229,22 @@ pt.sketchLines.init = function() {
 
     return {linePositions, songPositions, diamondPositions};
 	}
+
+	function drawPath(d, showLength) {
+    var x1 = d.radius - d.fullRadius;
+    var y1 = -d.radius;
+    var length = showLength ? d.length - 2 * d.radius : 0;
+    var x2 = x1 + length;
+    var y2 = d.radius
+
+    var result = 'M' + [x1, y1];
+    result += ' L' + [x2, y1];
+    result += ' A' + [d.radius, d.radius] + ' 0 0,1 ' + [x2, y2];
+    result += ' L' + [x1, y2];
+    result += ' A' + [d.radius, d.radius] + ' 0 0,1 ' + [x1, y1];
+    result += 'Z';
+
+    return result;
+  }
 
 }//init

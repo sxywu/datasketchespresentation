@@ -26,6 +26,9 @@ pt.slideIdToFunctions = {
     3: () => {
       pt.sketchLines.drawThemes(hamiltonThemes);
     },
+    4: () => {
+      pt.sketchLines.lowerOpacity();
+    },
   }
   // 'olympic-intro': {
   //   'init': function() {

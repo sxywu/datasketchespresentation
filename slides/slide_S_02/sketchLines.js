@@ -170,13 +170,18 @@
 
 	pt.sketchLines.lowerOpacity = function() {
 		var transition = d3.transition().duration(500);
+		var opacity = 0.25;
 		circles
 			.transition(transition)
-			.attr('opacity', 0.25);
+			.attr('opacity', opacity);
+
+		diamonds
+			.transition(transition)
+			.attr('opacity', opacity);
 
 		text
 			.transition(transition)
-			.attr('opacity', 0.25);
+			.attr('opacity', opacity);
 	}
 
 	function drawPath(d, showLength) {

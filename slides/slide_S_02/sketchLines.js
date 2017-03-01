@@ -19,12 +19,11 @@
 	// var {linePositions, songPositions, diamondPositions} =
 	// 	positionLines(hamiltonLines, hamiltonSongs, hamiltonThemes);
 
-	var transition = d3.transition().duration(500);
 	var simulation = d3.forceSimulation()
 		.force('collide', d3.forceCollide().radius(d => d.radius + 2))
 		.force('x', d3.forceX().x(d => d.focusX))
 		.force('y', d3.forceY().y(d => d.focusY))
-		// .alphaMin(0.1)
+		.alphaMin(0.4)
 		.stop();
 	var svg, circles, text;
 
@@ -63,18 +62,34 @@
 
 		circles.exit().remove();
 
-		circles = circles.enter().append('path')
-			.merge(circles)
+		var enter = circles.enter().append('path')
 			.attr('fill', (d) => d.fill)
 			.attr('d', (d) => drawPath(d));
 
-		simulation.nodes(lines)
-			.on('tick', () => {
-				circles.attr('transform', (d) => 'translate(' + [d.x, d.y] + ')');
-			}).on('end', () => {
+		// enter+update
+		circles = enter.merge(circles);
 
-			})
-			.alpha(0.75).restart();
+		var duration = 500;
+		circles.transition().duration(duration)
+			.attr('d', (d) => drawPath(d))
+			.on('end', (d, i) => {
+				// if they have all ended, then force layout
+				if (i === lines.length - 1) {
+					simulation.nodes(lines)
+						.on('tick', () => {
+							circles.attr('transform', (d) => 'translate(' + [d.x, d.y] + ')');
+						}).on('end', () => {
+							circles.transition().duration(duration)
+					      .attr('transform', (d) => {
+					        // set the x and y to its focus (where it should be)
+					        d.x = d.focusX;
+					        d.y = d.focusY;
+					        return 'translate(' + [d.x, d.y] + ')';
+					      });
+						})
+						.alpha(0.75).restart();
+				}
+			});
 	}
 
 

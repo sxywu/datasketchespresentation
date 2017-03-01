@@ -1,17 +1,5 @@
-pt.sketchLines = pt.sketchLines || {};
-
-pt.sketchLines.init = function() {
-
-	//Remove any existing svgs
-	d3.select('#sketch_lines #sketchLines svg').remove();
-
-	// calculate data
-	var {lines, songs, diamonds} = processData();
-	var {linePositions, songPositions, diamondPositions} = positionLines(lines, songs, diamonds);
-
-	///////////////////////////////////////////////////////////////////////////
-	/////////////////// draw lines and themes ///////////// ///////////////////
-	///////////////////////////////////////////////////////////////////////////
+(function () {
+	// properties and d3 initializations
 	var margin = {
 		top: 0,
 		right: 0,
@@ -20,118 +8,84 @@ pt.sketchLines.init = function() {
 	};
 	var width = window.innerWidth - margin.left - margin.right;
 	var height = window.innerHeight - margin.top - margin.bottom;
+
+	// // position lines, songs, themes
+	var allLines = [];
+	var perRow = 4;
+	var perWidth = 200;
+	var positions = {"1":[523.33,133.33],"2":[276.67,133.33],"3":[240,346.67],"4":[400,506.67],"5":[560,506.67],"6":[400,646.67],"7":[400,346.67],"8":[240,646.67],"10":[560,346.67],"11":[240,506.67],"15":[560,646.67],"other":[400,826.67]};
+	_.each(hamiltonLines, line => {
+		var [start, end] = line.lineId.split(':')[1].split('-');
+		start = parseInt(start);
+		end = parseInt(end || start) + 1;
+		var [focusY, focusX] = positions[line.characterId] || positions['other'];
+
+		_.times(end - start, i => {
+			var lineId = (i === 0) ? line.lineId :
+				line.lineId.replace(/\:[\d-]*/, ':' + (start + i));
+			var id = line.characterId + '/' + lineId;
+			var radius = 2;
+
+			allLines.push(Object.assign({}, line, {
+				id, lineId,
+				focusX, focusY,
+				x: Math.random() * window.innerWidth,
+				y: Math.random() * window.innerHeight,
+				length: 0,
+				radius,
+				fullRadius: radius,
+			}));
+		});
+	});
+	// var {linePositions, songPositions, diamondPositions} =
+	// 	positionLines(hamiltonLines, hamiltonSongs, hamiltonThemes);
+
 	var transition = d3.transition().duration(500);
-
-	// initiate SVG elements
-	var svg = d3.select('#sketch_lines #sketchLines')
-		.append('svg')
-		.attr('width', width).attr('height', height);
-
-	var circles = svg.selectAll('path')
-      .data(linePositions, (d) => d.id);
-
-  circles.exit().remove();
-
-  circles = circles.enter().append('path')
-    .merge(circles)
-    .style('cursor', (d) => d.selected ? 'pointer' : 'default')
-    .attr('fill', (d) => d.fill)
-    .attr('d', (d) => drawPath(d));
-
 	var simulation = d3.forceSimulation()
-		.force("charge", d3.forceManyBody())
-	  .force('collide', d3.forceCollide().radius(d => d.radius))
-	  .force('x', d3.forceX().x(d => d.focusX))
-	  .force('y', d3.forceY().y(d => d.focusY))
-		.nodes(linePositions)
-    .on('tick', () => {
-			circles.attr('transform', (d) => 'translate(' + [d.x, d.y] + ')');
-		}).on('end', () => {
-			circles.transition(transition)
-	      .attr('d', (d) => drawPath(d, true))
-	      .attr('transform', (d) => {
-	        // set the x and y to its focus (where it should be)
-	        d.x = d.focusX;
-	        d.y = d.focusY;
-	        return 'translate(' + [d.x, d.y] + ')';
-	      });
-		})
-	  .alphaMin(.4);
+		.force('collide', d3.forceCollide().radius(d => d.radius + 3))
+		.force('x', d3.forceX().x(d => d.focusX))
+		.force('y', d3.forceY().y(d => d.focusY))
+		.stop();
+	var svg, circles, text;
 
-	///////////////////////////////////////////////////////////////////////////
-	/////////////////// Process data (lines, songs, themes) ///////////////////
-	///////////////////////////////////////////////////////////////////////////
-	function processData() {
-		// duplicate any of the lines sung by multiple characters
-		var lines = _.chain(rawLines)
-			.map((line, lineId) => {
-				// get all characters from the line
-				return _.map(line[1][0], (character, i) => {
-					var id = character + '/' + lineId;
-					var songId = lineId.split(':')[0];
+	pt.sketchLines = pt.sketchLines || {};
 
-					return {
-						id,
-						lineId,
-						songId,
-						characterId: character,
-						characterName: charList[character][0],
-						songName: songList[songId],
-						numSingers: line[1][0].length,
-						singerIndex: i,
-						conversing: null,
-						fill: charList[character][4],
-						trueFill: charList[character][4],
-						selected: true,
-						data: line,
-					};
-				});
-			}).flatten().value();
+	pt.sketchLines.init = function() {
+		//Remove any existing svgs
+		d3.select('#sketch_lines #sketchLines svg').remove();
 
-		var songs = _.reduce(songList, (obj, name, id) => {
-		  obj[id] = {
-		    id,
-		    name,
-		  }
-		  return obj;
-		}, {});
+		// initiate SVG elements
+		svg = d3.select('#sketch_lines #sketchLines')
+			.append('svg')
+			.attr('width', width).attr('height', height);
 
-		var color = d3.scaleOrdinal(d3.schemeCategory20);
-		var diamonds = _.chain(rawThemes)
-	    .map((lineKeys, theme) => {
-	      if (!themeList[theme][2]) return null;
-
-	      return _.map(lineKeys, (lineKey) => {
-	        var lineId = lineKey[0][0];
-	        var songId = parseInt(lineId.split(':')[0], 10);
-	        var startLine = lineId.split(':')[1].split('/');
-	        var startLineId = songId + ':' + startLine[1];
-	        startLine = parseInt(startLine[0], 10);
-	        var endLine = _.last(lineKey[0]).split(':')[1].split('/');
-	        var endLineId = songId + ':' + endLine[1];
-	        endLine = parseInt(endLine[0], 10);
-
-	        return {
-	          id: theme + '/' + songId + ':' + startLine,
-	          themeId: theme,
-	          themeType: themeList[theme][1],
-	          themeLines: themeList[theme][0],
-	          lineId: lineId.split('/')[0],
-	          songId,
-	          startLine,
-	          endLine,
-	          startLineId,
-	          endLineId,
-	          fill: color(theme),
-	          keys: lineKey[0],
-	          lines: lineKey[1],
-	        }
-	      });
-	    }).filter().flatten()
-	    .value();
-
-		return {lines, songs, diamonds};
+		pt.sketchLines.allLines();
 	}
+
+	///////////////////////////////////////////////////////////////////////////
+	////////// draw circles for all lines, not grouped ////////////////////////
+	///////////////////////////////////////////////////////////////////////////
+	pt.sketchLines.allLines = function() {
+		// first create data of ALL the lines
+		circles = svg.selectAll('path')
+				.data(allLines, (d) => d.id);
+
+		circles.exit().remove();
+
+		circles = circles.enter().append('path')
+			.merge(circles)
+			.attr('fill', (d) => d.fill)
+			.attr('d', (d) => drawPath(d));
+
+		simulation.nodes(allLines)
+			.on('tick', () => {
+				circles.attr('transform', (d) => 'translate(' + [d.x, d.y] + ')');
+			})
+			.alphaMin(0.1)
+			.alpha(0.75).restart();
+	}
+
+
 
 	///////////////////////////////////////////////////////////////////////////
 	/////////////////// Position lines and themes /////////////////////////////
@@ -231,20 +185,19 @@ pt.sketchLines.init = function() {
 	}
 
 	function drawPath(d, showLength) {
-    var x1 = d.radius - d.fullRadius;
-    var y1 = -d.radius;
-    var length = showLength ? d.length - 2 * d.radius : 0;
-    var x2 = x1 + length;
-    var y2 = d.radius
+		var x1 = d.radius - d.fullRadius;
+		var y1 = -d.radius;
+		var length = showLength ? d.length - 2 * d.radius : 0;
+		var x2 = x1 + length;
+		var y2 = d.radius
 
-    var result = 'M' + [x1, y1];
-    result += ' L' + [x2, y1];
-    result += ' A' + [d.radius, d.radius] + ' 0 0,1 ' + [x2, y2];
-    result += ' L' + [x1, y2];
-    result += ' A' + [d.radius, d.radius] + ' 0 0,1 ' + [x1, y1];
-    result += 'Z';
+		var result = 'M' + [x1, y1];
+		result += ' L' + [x2, y1];
+		result += ' A' + [d.radius, d.radius] + ' 0 0,1 ' + [x2, y2];
+		result += ' L' + [x1, y2];
+		result += ' A' + [d.radius, d.radius] + ' 0 0,1 ' + [x1, y1];
+		result += 'Z';
 
-    return result;
-  }
-
-}//init
+		return result;
+	}
+})();

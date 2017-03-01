@@ -21,7 +21,7 @@
 		.force('y', d3.forceY().y(d => d.focusY))
 		.alphaMin(0.4)
 		.stop();
-	var svg, circles, text;
+	var svg, circles, text, diamonds;
 
 	pt.sketchLines = pt.sketchLines || {};
 
@@ -34,13 +34,14 @@
 			.append('svg')
 			.attr('width', width).attr('height', height);
 		svg.append('g').classed('circles', true);
+		svg.append('g').classed('diamonds', true);
 		svg.append('g').classed('texts', true);
 
 		pt.sketchLines.drawLines(hamiltonAllLines);
 	}
 
 	///////////////////////////////////////////////////////////////////////////
-	////////// draw circles for all lines, not grouped ////////////////////////
+	////////// draw lines/diamonds/songs //////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////
 	var prevLines;
 	pt.sketchLines.drawLines = function(lines, showLength) {
@@ -92,6 +93,46 @@
 			});
 	}
 
+	pt.sketchLines.drawThemes = function(themes) {
+		var transition = d3.transition().duration(500);
+
+		diamonds = svg.select('.diamonds').selectAll('g')
+      .data(themes, (d) => d.id);
+
+    diamonds.exit().transition(transition)
+			.attr('opacity', 0).remove();
+
+    var enter = diamonds.enter().append('g')
+      .classed('diamond', true)
+			.attr('opacity', 0)
+      .style('cursor', 'pointer');
+
+    diamonds = enter.merge(diamonds)
+			.attr('stroke', (d) => d.fill)
+      .attr('fill', (d) => d.fill);
+
+		diamonds.transition(transition)
+			.attr('opacity', 1);
+
+    diamonds.selectAll('path')
+      .data((d) => d.positions)
+      .enter().append('path');
+    diamonds.filter((d) => d.positions.length > 1)
+      .append('line');
+
+    diamonds.selectAll('path')
+      .attr('transform', (d) => 'translate(' + [d.x, d.y]+ ')')
+      .attr('d', (d) => 'M0,-' + d.size + ' L' + d.size + ',0 L0,' + d.size + ' L-' + d.size + ',0 Z');
+
+    // only draw lines for those with two positions
+    diamonds.selectAll('line')
+      .attr('x1', (d) => d.positions[0].x)
+      .attr('x2', (d) => d.positions[1].x)
+      .attr('y1', (d) => d.positions[0].y)
+      .attr('y2', (d) => d.positions[1].y)
+      .attr('stroke', (d) => d.fill);
+	}
+
 	pt.sketchLines.drawSongs = function(songs, textAnchor) {
 		var fontSize = 12;
 
@@ -122,6 +163,10 @@
 			.attr('text-anchor', textAnchor)
 			.text(d => d.name);
 	}
+
+	///////////////////////////////////////////////////////////////////////////
+	////////// helper functions ///////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////
 
 	pt.sketchLines.lowerOpacity = function() {
 		var transition = d3.transition().duration(500);

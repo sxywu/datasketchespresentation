@@ -21,7 +21,11 @@ pt.slideIdToFunctions = {
     2: () => {
       pt.sketchLines.drawLines(hamiltonLines, true);
       pt.sketchLines.drawSongs(hamiltonSongs, 'start');
-    }
+      pt.sketchLines.drawThemes([]);
+    },
+    3: () => {
+      pt.sketchLines.drawThemes(hamiltonThemes);
+    },
   }
   // 'olympic-intro': {
   //   'init': function() {

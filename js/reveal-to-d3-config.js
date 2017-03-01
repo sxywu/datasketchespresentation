@@ -3,7 +3,7 @@
 var pt = pt || {};
 
 pt.slideIdToFunctions = {
-  'sketch_lines': {
+  'sketch-lines': {
     init: () => {
       pt.sketchLines.init();
     },
@@ -12,6 +12,12 @@ pt.slideIdToFunctions = {
     },
     0: () => {
       pt.sketchLines.drawLines(hamiltonGroupedLines);
+    },
+    1: () => {
+      pt.sketchLines.lowerOpacity();
+    },
+    2: () => {
+      pt.sketchLines.drawLines(hamiltonLines, true);
     }
   }
   // 'olympic-intro': {

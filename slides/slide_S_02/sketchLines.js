@@ -31,10 +31,10 @@
 
 	pt.sketchLines.init = function() {
 		//Remove any existing svgs
-		d3.select('#sketch_lines #sketchLines svg').remove();
+		d3.select('#sketch-lines #sketchLines svg').remove();
 
 		// initiate SVG elements
-		svg = d3.select('#sketch_lines #sketchLines')
+		svg = d3.select('#sketch-lines #sketchLines')
 			.append('svg')
 			.attr('width', width).attr('height', height);
 
@@ -45,7 +45,7 @@
 	////////// draw circles for all lines, not grouped ////////////////////////
 	///////////////////////////////////////////////////////////////////////////
 	var prevLines;
-	pt.sketchLines.drawLines = function(lines) {
+	pt.sketchLines.drawLines = function(lines, showLength) {
 		if (prevLines) {
 			_.each(lines, line => {
 				var prevLine = _.find(prevLines, prevLine => prevLine.id === line.id);
@@ -64,14 +64,15 @@
 
 		var enter = circles.enter().append('path')
 			.attr('fill', (d) => d.fill)
-			.attr('d', (d) => drawPath(d));
+			.attr('d', d => drawPath(d));
 
 		// enter+update
-		circles = enter.merge(circles);
+		circles = enter.merge(circles)
+			.attr('opacity', 1);
 
 		var duration = 500;
 		circles.transition().duration(duration)
-			.attr('d', (d) => drawPath(d))
+			.attr('d', d => drawPath(d))
 			.on('end', (d, i) => {
 				// if they have all ended, then force layout
 				if (i === lines.length - 1) {
@@ -85,11 +86,17 @@
 					        d.x = d.focusX;
 					        d.y = d.focusY;
 					        return 'translate(' + [d.x, d.y] + ')';
-					      });
+					      }).attr('d', (d) => drawPath(d, showLength));
 						})
 						.alpha(0.75).restart();
 				}
 			});
+	}
+
+	pt.sketchLines.lowerOpacity = function() {
+		circles
+			.transition().duration(500)
+			.attr('opacity', 0.25);
 	}
 
 

@@ -6,6 +6,12 @@ pt.slideIdToFunctions = {
   'sketch_lines': {
     init: () => {
       pt.sketchLines.init();
+    },
+    '-1': () => {
+      pt.sketchLines.drawLines(hamiltonAllLines);
+    },
+    0: () => {
+      pt.sketchLines.drawLines(hamiltonGroupedLines);
     }
   }
   // 'olympic-intro': {

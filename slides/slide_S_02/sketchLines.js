@@ -9,42 +9,22 @@
 	var width = window.innerWidth - margin.left - margin.right;
 	var height = window.innerHeight - margin.top - margin.bottom;
 
+	var radius = 3;
+	var radiusExtent = d3.extent(hamiltonLines, line => line.data[3]);
+	var radiusScale = d3.scaleLinear()
+		.domain(radiusExtent)
+		.range([radius, radius * 5]);
+
 	// // position lines, songs, themes
-	var allLines = [];
-	var perRow = 4;
-	var perWidth = 200;
-	var positions = {"1":[523.33,133.33],"2":[276.67,133.33],"3":[240,346.67],"4":[400,506.67],"5":[560,506.67],"6":[400,646.67],"7":[400,346.67],"8":[240,646.67],"10":[560,346.67],"11":[240,506.67],"15":[560,646.67],"other":[400,826.67]};
-	_.each(hamiltonLines, line => {
-		var [start, end] = line.lineId.split(':')[1].split('-');
-		start = parseInt(start);
-		end = parseInt(end || start) + 1;
-		var [focusY, focusX] = positions[line.characterId] || positions['other'];
-
-		_.times(end - start, i => {
-			var lineId = (i === 0) ? line.lineId :
-				line.lineId.replace(/\:[\d-]*/, ':' + (start + i));
-			var id = line.characterId + '/' + lineId;
-			var radius = 2;
-
-			allLines.push(Object.assign({}, line, {
-				id, lineId,
-				focusX, focusY,
-				x: Math.random() * window.innerWidth,
-				y: Math.random() * window.innerHeight,
-				length: 0,
-				radius,
-				fullRadius: radius,
-			}));
-		});
-	});
 	// var {linePositions, songPositions, diamondPositions} =
 	// 	positionLines(hamiltonLines, hamiltonSongs, hamiltonThemes);
 
 	var transition = d3.transition().duration(500);
 	var simulation = d3.forceSimulation()
-		.force('collide', d3.forceCollide().radius(d => d.radius + 3))
+		.force('collide', d3.forceCollide().radius(d => d.radius + 2))
 		.force('x', d3.forceX().x(d => d.focusX))
 		.force('y', d3.forceY().y(d => d.focusY))
+		// .alphaMin(0.1)
 		.stop();
 	var svg, circles, text;
 
@@ -59,16 +39,27 @@
 			.append('svg')
 			.attr('width', width).attr('height', height);
 
-		pt.sketchLines.allLines();
+		pt.sketchLines.drawLines(hamiltonAllLines);
 	}
 
 	///////////////////////////////////////////////////////////////////////////
 	////////// draw circles for all lines, not grouped ////////////////////////
 	///////////////////////////////////////////////////////////////////////////
-	pt.sketchLines.allLines = function() {
+	var prevLines;
+	pt.sketchLines.drawLines = function(lines) {
+		if (prevLines) {
+			_.each(lines, line => {
+				var prevLine = _.find(prevLines, prevLine => prevLine.id === line.id);
+				if (!prevLine) return;
+				line.x = prevLine.x;
+				line.y = prevLine.y;
+			});
+		}
+		prevLines = lines;
+
 		// first create data of ALL the lines
 		circles = svg.selectAll('path')
-				.data(allLines, (d) => d.id);
+				.data(lines, (d) => d.id);
 
 		circles.exit().remove();
 
@@ -77,14 +68,14 @@
 			.attr('fill', (d) => d.fill)
 			.attr('d', (d) => drawPath(d));
 
-		simulation.nodes(allLines)
+		simulation.nodes(lines)
 			.on('tick', () => {
 				circles.attr('transform', (d) => 'translate(' + [d.x, d.y] + ')');
+			}).on('end', () => {
+
 			})
-			.alphaMin(0.1)
 			.alpha(0.75).restart();
 	}
-
 
 
 	///////////////////////////////////////////////////////////////////////////

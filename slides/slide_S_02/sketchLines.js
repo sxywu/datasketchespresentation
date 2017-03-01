@@ -33,6 +33,8 @@
 		svg = d3.select('#sketch-lines #sketchLines')
 			.append('svg')
 			.attr('width', width).attr('height', height);
+		svg.append('g').classed('circles', true);
+		svg.append('g').classed('texts', true);
 
 		pt.sketchLines.drawLines(hamiltonAllLines);
 	}
@@ -53,8 +55,9 @@
 		prevLines = lines;
 
 		// first create data of ALL the lines
-		circles = svg.selectAll('path')
-				.data(lines, (d) => d.id);
+		circles = svg.select('.circles')
+			.selectAll('path')
+			.data(lines, (d) => d.id);
 
 		circles.exit().remove();
 
@@ -89,9 +92,45 @@
 			});
 	}
 
+	pt.sketchLines.drawSongs = function(songs, textAnchor) {
+		var fontSize = 12;
+
+		text = svg.select('.texts')
+			.selectAll('.song')
+			.data(songs, song => song.id);
+
+		text.exit().remove();
+
+		var enter = text.enter().append('g')
+			.classed('song', true);
+		enter.append('rect')
+			.attr('width', fontSize * 12)
+			.attr('height', fontSize + 4)
+			.attr('x', -fontSize * 6)
+			.attr('y', -fontSize / 2 - 2)
+			.attr('fill', '#fff')
+			.attr('opacity', 0.85);
+		enter.append('text')
+			.attr('dy', '.35em')
+			.attr('font-size', 14);
+
+		text = enter.merge(text)
+			.attr('opacity', 1)
+			.attr('transform', d => 'translate(' + [d.x, d.y] + ')');
+
+		text.select('text')
+			.attr('text-anchor', textAnchor)
+			.text(d => d.name);
+	}
+
 	pt.sketchLines.lowerOpacity = function() {
+		var transition = d3.transition().duration(500);
 		circles
-			.transition().duration(500)
+			.transition(transition)
+			.attr('opacity', 0.25);
+
+		text
+			.transition(transition)
 			.attr('opacity', 0.25);
 	}
 

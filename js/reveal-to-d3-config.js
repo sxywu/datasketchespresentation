@@ -9,15 +9,18 @@ pt.slideIdToFunctions = {
     },
     '-1': () => {
       pt.sketchLines.drawLines(hamiltonAllLines);
+      pt.sketchLines.drawSongs(hamiltonCharacters, 'middle');
     },
     0: () => {
       pt.sketchLines.drawLines(hamiltonGroupedLines);
+      pt.sketchLines.drawSongs(hamiltonCharacters, 'middle');
     },
     1: () => {
       pt.sketchLines.lowerOpacity();
     },
     2: () => {
       pt.sketchLines.drawLines(hamiltonLines, true);
+      pt.sketchLines.drawSongs(hamiltonSongs, 'start');
     }
   }
   // 'olympic-intro': {

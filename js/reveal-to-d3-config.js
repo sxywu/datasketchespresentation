@@ -32,6 +32,7 @@ pt.slideIdToFunctions = {
     5: () => {
       pt.sketchLines.drawLines(hamiltonFinalLines, true);
       pt.sketchLines.drawSongs(hamiltonFinalSongs, 'start');
+      pt.sketchLines.drawStaffs(hamiltonFinalSongs);
       pt.sketchLines.drawThemes([]);
     },
   }

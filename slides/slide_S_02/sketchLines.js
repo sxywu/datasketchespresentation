@@ -21,7 +21,7 @@
 		.force('y', d3.forceY().y(d => d.focusY))
 		.alphaMin(0.4)
 		.stop();
-	var svg, circles, text, diamonds;
+	var svg, circles, text, diamonds, staffs;
 
 	pt.sketchLines = pt.sketchLines || {};
 
@@ -33,6 +33,7 @@
 		svg = d3.select('#sketch-lines #sketchLines')
 			.append('svg')
 			.attr('width', width).attr('height', height);
+		svg.append('g').classed('staffs', true);
 		svg.append('g').classed('circles', true);
 		svg.append('g').classed('diamonds', true);
 		svg.append('g').classed('texts', true);
@@ -147,7 +148,6 @@
 		enter.append('rect')
 			.attr('width', fontSize * 12)
 			.attr('height', fontSize + 4)
-			.attr('x', -fontSize * 6)
 			.attr('y', -fontSize / 2 - 2)
 			.attr('fill', '#fff')
 			.attr('opacity', 0.85);
@@ -159,9 +159,27 @@
 			.attr('opacity', 1)
 			.attr('transform', d => 'translate(' + [d.x, d.y] + ')');
 
+		text.select('rect')
+			.attr('x', textAnchor === 'start' ? 0 : -fontSize * 6)
 		text.select('text')
 			.attr('text-anchor', textAnchor)
 			.text(d => d.name);
+	}
+
+	pt.sketchLines.drawStaffs = function(songs) {
+    staffs = svg.select('.staffs')
+			.selectAll('.staff')
+      .data(songs, d => d.id);
+
+    staffs.exit().remove();
+
+    staffs = staffs.enter().append('g')
+      .classed('staff', true)
+			.merge(staffs)
+      .attr('transform', d => 'translate(' + [d.x, d.y] + ')');
+
+    updateRows();
+    updateColumns();
 	}
 
 	///////////////////////////////////////////////////////////////////////////
@@ -199,5 +217,49 @@
 		result += 'Z';
 
 		return result;
+	}
+
+	function updateRows() {
+		var rows = staffs.selectAll('.row')
+			.data(d => {
+				return _.map(d.rows, row => {
+					return {
+						x2: d.width,
+						y1: row,
+						y2: row,
+					};
+				});
+			});
+		rows.exit().remove();
+		rows.enter().append('line')
+			.classed('row', true)
+			.merge(rows)
+			.attr('x2', d => d.x2)
+			.attr('y1', d => d.y1)
+			.attr('y2', d => d.y2)
+			.attr('stroke', '#333');
+	}
+
+	function updateColumns() {
+		var columns = staffs.selectAll('.column')
+			.data(d => {
+				return _.map(d.columns, column => {
+					return {
+						x1: column[1],
+						x2: column[1],
+						y2: d.height,
+						strokeWidth: column[0],
+					};
+				});
+			});
+		columns.exit().remove();
+		columns.enter().append('line')
+			.classed('column', true)
+			.attr('stroke', '#333')
+			.merge(columns)
+			.attr('x1', d => d.x1)
+			.attr('x2', d => d.x2)
+			.attr('y2', d => d.y2)
+			.attr('stroke-width', d => d.strokeWidth);
 	}
 })();

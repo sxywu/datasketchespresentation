@@ -88,6 +88,15 @@ pt.slideIdToFunctions = {
         pt.sketchLines.drawCurves(hamiltonFinalThemes);
       });
     },
+    6: () => {
+      // take away staff finally
+      var animateBefore = false;
+      var triggerForce = false;
+      pt.sketchLines.drawLines(hamiltonFinalLines, animateBefore, triggerForce);
+      pt.sketchLines.drawSongs(hamiltonFinalSongs, 'start');
+      pt.sketchLines.drawCurves(hamiltonFinalThemes);
+      pt.sketchLines.drawStaffs([]);
+    },
   }
   // 'olympic-intro': {
   //   'init': function() {

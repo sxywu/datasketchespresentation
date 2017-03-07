@@ -10,6 +10,7 @@
 	var height = window.innerHeight - margin.top - margin.bottom;
 
 	var radius = 3;
+	var fontColor = '#666';
 	var radiusExtent = d3.extent(hamiltonLines, line => line.data[3]);
 	var radiusScale = d3.scaleLinear()
 		.domain(radiusExtent)
@@ -21,7 +22,7 @@
 		.force('y', d3.forceY().y(d => d.focusY))
 		.alphaMin(0.4)
 		.stop();
-	var svg, circles, text, diamonds, staffs;
+	var svg, circles, text, diamonds, staffs, curves;
 
 	pt.sketchLines = pt.sketchLines || {};
 
@@ -36,6 +37,7 @@
 		svg.append('g').classed('staffs', true);
 		svg.append('g').classed('circles', true);
 		svg.append('g').classed('diamonds', true);
+		svg.append('g').classed('curves', true);
 		svg.append('g').classed('texts', true);
 
 		pt.sketchLines.drawLines(hamiltonAllLines);
@@ -182,6 +184,34 @@
     updateColumns();
 	}
 
+	pt.sketchLines.drawCurves = function(themes) {
+		var fontSize = 9;
+    curves = svg.select('.curves')
+			.selectAll('.curve')
+      .data(themes, d => d.id);
+
+		curves.exit().remove();
+
+		var enter = curves.enter().append('g')
+			.classed('curve', true);
+		enter.append('path')
+			.attr('fill', 'none')
+			.attr('stroke', fontColor);
+		enter.append('text')
+			.attr('font-style', 'italic')
+			.attr('font-size', fontSize)
+			.attr('fill', fontColor);
+
+		curves = enter.merge(curves);
+		curves.select('path')
+			.attr('d', d => drawCurves(d, fontSize));
+		curves.select('text')
+			.attr('x', d => d.x2 - fontSize)
+			.attr('y', d => d.y1)
+			.text(d => d.themeType[0].toLowerCase() + d.groupId)
+
+	}
+
 	///////////////////////////////////////////////////////////////////////////
 	////////// helper functions ///////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////
@@ -219,6 +249,17 @@
 		return result;
 	}
 
+	function drawCurves(d, fontSize) {
+		var x = d.x2 - fontSize;
+    var y = d.y2;
+		if ((x - d.x1) * 0.25 <= fontSize) return '';
+
+		var cpx = (x - d.x1) * 0.25 + d.x1;
+    var cpy = y - 0.85 * fontSize;
+
+		return 'M' + [d.x1, y] + ' C' + [cpx, cpy, x, cpy, x, cpy];
+	}
+
 	function updateRows() {
 		var rows = staffs.selectAll('.row')
 			.data(d => {
@@ -237,7 +278,7 @@
 			.attr('x2', d => d.x2)
 			.attr('y1', d => d.y1)
 			.attr('y2', d => d.y2)
-			.attr('stroke', '#333');
+			.attr('stroke', fontColor);
 	}
 
 	function updateColumns() {
@@ -255,7 +296,7 @@
 		columns.exit().remove();
 		columns.enter().append('line')
 			.classed('column', true)
-			.attr('stroke', '#333')
+			.attr('stroke', fontColor)
 			.merge(columns)
 			.attr('x1', d => d.x1)
 			.attr('x2', d => d.x2)

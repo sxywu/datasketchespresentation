@@ -33,6 +33,7 @@ pt.slideIdToFunctions = {
       pt.sketchLines.drawLines(hamiltonFinalLines, true);
       pt.sketchLines.drawSongs(hamiltonFinalSongs, 'start');
       pt.sketchLines.drawStaffs(hamiltonFinalSongs);
+      pt.sketchLines.drawCurves(hamiltonFinalThemes);
       pt.sketchLines.drawThemes([]);
     },
   }

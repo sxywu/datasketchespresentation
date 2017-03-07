@@ -10,6 +10,7 @@
 	var height = window.innerHeight - margin.top - margin.bottom;
 
 	var radius = 3;
+	var duration = 500;
 	var fontColor = '#666';
 	var radiusExtent = d3.extent(hamiltonLines, line => line.data[3]);
 	var radiusScale = d3.scaleLinear()
@@ -47,7 +48,7 @@
 	////////// draw lines/diamonds/songs //////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////
 	var prevLines;
-	pt.sketchLines.drawLines = function(lines, callback) {
+	pt.sketchLines.drawLines = function(lines, animateBefore, triggerForce, callback) {
 		if (prevLines) {
 			_.each(lines, line => {
 				var prevLine = _.find(prevLines, prevLine => prevLine.id === line.id);
@@ -73,39 +74,28 @@
 		circles = enter.merge(circles)
 			.attr('opacity', 1);
 
-		var duration = 500;
-		circles.transition().duration(duration)
-			.attr('d', drawPath)
-			.on('end', (d, i) => {
-				// if they have all ended, then force layout
-				if (i === lines.length - 1) {
-					simulation.nodes(lines)
-						.on('tick', () => {
-							circles.attr('transform', (d) => 'translate(' + [d.x, d.y] + ')');
-						}).on('end', () => {
-							circles.transition().duration(duration)
-					      .attr('transform', (d) => {
-					        // set the x and y to its focus (where it should be)
-					        d.x = d.focusX;
-					        d.y = d.focusY;
-					        return 'translate(' + [d.x, d.y] + ')';
-					      }).attr('d', drawPath);
+		if (animateBefore) {
+			circles.transition().duration(duration)
+				.attr('d', drawPath)
+				.on('end', (d, i) => {
+					// if they have all ended, then force layout
+					if (i === lines.length - 1) {
+						positionLines(lines, triggerForce, callback);
+					}
+				});
+		} else {
+			positionLines(lines, triggerForce, callback);
+		}
 
-							callback && callback();
-						})
-						.alpha(0.75).restart();
-				}
-			});
 	}
 
 	pt.sketchLines.drawThemes = function(themes) {
-		var transition = d3.transition().duration(500);
+		var transition = d3.transition().duration(duration);
 
 		diamonds = svg.select('.diamonds').selectAll('g')
       .data(themes, (d) => d.id);
 
-    diamonds.exit().transition(transition)
-			.attr('opacity', 0).remove();
+    diamonds.exit().remove();
 
     var enter = diamonds.enter().append('g')
       .classed('diamond', true)
@@ -139,6 +129,7 @@
 	}
 
 	pt.sketchLines.drawSongs = function(songs, textAnchor) {
+		var transition = d3.transition().duration(duration);
 		var fontSize = 12;
 
 		text = svg.select('.texts')
@@ -162,6 +153,9 @@
 		text = enter.merge(text)
 			.attr('opacity', 1)
 			.attr('transform', d => 'translate(' + [d.x, d.y] + ')');
+
+		text.transition(transition)
+			.attr('opacity', 1);
 
 		text.select('rect')
 			.attr('x', textAnchor === 'start' ? 0 : -fontSize * 6)
@@ -219,7 +213,7 @@
 	///////////////////////////////////////////////////////////////////////////
 
 	pt.sketchLines.lowerOpacity = function() {
-		var transition = d3.transition().duration(500);
+		var transition = d3.transition().duration(duration);
 		var opacity = 0.25;
 		circles
 			.transition(transition)
@@ -232,6 +226,31 @@
 		text
 			.transition(transition)
 			.attr('opacity', opacity);
+	}
+
+	function positionLines(lines, triggerForce, callback) {
+		if (triggerForce) {
+			simulation.nodes(lines)
+				.on('tick', () => {
+					circles.attr('transform', (d) => 'translate(' + [d.x, d.y] + ')');
+				}).on('end', () => {
+					afterPositionLines(callback);
+				}).alpha(0.75).restart();
+		} else {
+			afterPositionLines(callback);
+		}
+	}
+
+	function afterPositionLines(callback) {
+		circles.transition().duration(duration)
+			.attr('transform', (d) => {
+				// set the x and y to its focus (where it should be)
+				d.x = d.focusX;
+				d.y = d.focusY;
+				return 'translate(' + [d.x, d.y] + ')';
+			}).attr('d', drawPath);
+
+		callback && callback();
 	}
 
 	function drawPath(d) {

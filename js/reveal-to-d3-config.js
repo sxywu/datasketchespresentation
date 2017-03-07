@@ -19,7 +19,7 @@ pt.slideIdToFunctions = {
       pt.sketchLines.lowerOpacity();
     },
     2: () => {
-      pt.sketchLines.drawLines(hamiltonLines, true);
+      pt.sketchLines.drawLines(hamiltonLines);
       pt.sketchLines.drawSongs(hamiltonSongs, 'start');
       pt.sketchLines.drawThemes([]);
     },
@@ -30,7 +30,7 @@ pt.slideIdToFunctions = {
       pt.sketchLines.lowerOpacity();
     },
     5: () => {
-      pt.sketchLines.drawLines(hamiltonFinalLines, true);
+      pt.sketchLines.drawLines(hamiltonFinalLines);
       pt.sketchLines.drawSongs(hamiltonFinalSongs, 'start');
       pt.sketchLines.drawStaffs(hamiltonFinalSongs);
       pt.sketchLines.drawCurves(hamiltonFinalThemes);

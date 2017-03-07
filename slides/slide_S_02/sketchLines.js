@@ -47,7 +47,7 @@
 	////////// draw lines/diamonds/songs //////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////
 	var prevLines;
-	pt.sketchLines.drawLines = function(lines, showLength) {
+	pt.sketchLines.drawLines = function(lines, callback) {
 		if (prevLines) {
 			_.each(lines, line => {
 				var prevLine = _.find(prevLines, prevLine => prevLine.id === line.id);
@@ -67,7 +67,7 @@
 
 		var enter = circles.enter().append('path')
 			.attr('fill', (d) => d.fill)
-			.attr('d', d => drawPath(d));
+			.attr('d', drawPath);
 
 		// enter+update
 		circles = enter.merge(circles)
@@ -75,7 +75,7 @@
 
 		var duration = 500;
 		circles.transition().duration(duration)
-			.attr('d', d => drawPath(d))
+			.attr('d', drawPath)
 			.on('end', (d, i) => {
 				// if they have all ended, then force layout
 				if (i === lines.length - 1) {
@@ -89,7 +89,9 @@
 					        d.x = d.focusX;
 					        d.y = d.focusY;
 					        return 'translate(' + [d.x, d.y] + ')';
-					      }).attr('d', (d) => drawPath(d, showLength));
+					      }).attr('d', drawPath);
+
+							callback && callback();
 						})
 						.alpha(0.75).restart();
 				}
@@ -232,10 +234,10 @@
 			.attr('opacity', opacity);
 	}
 
-	function drawPath(d, showLength) {
+	function drawPath(d) {
 		var x1 = d.radius - d.fullRadius;
 		var y1 = -d.radius;
-		var length = showLength ? d.length - 2 * d.radius : 0;
+		var length = d.length - 2 * d.radius;
 		var x2 = x1 + length;
 		var y2 = d.radius
 

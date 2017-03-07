@@ -357,31 +357,31 @@ body {
  *********************************************/
 .reveal .controls .navigate-left,
 .reveal .controls .navigate-left.enabled {
-  border-right-color: #2a76dd; }
+  border-right-color: rgb(204, 119, 170); }
 
 .reveal .controls .navigate-right,
 .reveal .controls .navigate-right.enabled {
-  border-left-color: #2a76dd; }
+  border-left-color: rgb(53, 169, 147); }
 
 .reveal .controls .navigate-up,
 .reveal .controls .navigate-up.enabled {
-  border-bottom-color: #2a76dd; }
+  border-bottom-color: rgb(81, 173, 223); }
 
 .reveal .controls .navigate-down,
 .reveal .controls .navigate-down.enabled {
-  border-top-color: #2a76dd; }
+  border-top-color: rgb(109, 219, 196); }
 
 .reveal .controls .navigate-left.enabled:hover {
-  border-right-color: #6ca0e8; }
+  border-right-color: rgb(204, 119, 170); }
 
 .reveal .controls .navigate-right.enabled:hover {
-  border-left-color: #6ca0e8; }
+  border-left-color: rgb(53, 169, 147); }
 
 .reveal .controls .navigate-up.enabled:hover {
-  border-bottom-color: #6ca0e8; }
+  border-bottom-color: rgb(81, 173, 223); }
 
 .reveal .controls .navigate-down.enabled:hover {
-  border-top-color: #6ca0e8; }
+  border-top-color: rgb(109, 219, 196); }
 
 /*********************************************
  * PROGRESS BAR

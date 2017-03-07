@@ -98,17 +98,6 @@ pt.slideIdToFunctions = {
       pt.sketchLines.drawStaffs([]);
     },
   }
-  // 'olympic-intro': {
-  //   'init': function() {
-  //     pt.olympicIntro.init(olympicData);
-  //   },
-  //   '-1': function() {
-  //     pt.olympicIntro.smallStart();
-  //   },
-  //   0: function() {
-  //     pt.olympicIntro.bigEnd();
-  //   },
-  // },
 };
 
 function removeSVGs() {
